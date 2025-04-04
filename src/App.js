@@ -36,15 +36,22 @@ const serviceData = [
 ];
 
 function App() {
-  const [darkMode, setDarkMode] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
+  const [darkMode, setDarkMode] = useState(true); // Default to dark mode
 
   useEffect(() => {
-    setIsMounted(true);
     const savedTheme = localStorage.getItem("darkMode");
-    if (savedTheme === "true") {
+    if (savedTheme === null) {
       setDarkMode(true);
       document.documentElement.classList.add("dark");
+      localStorage.setItem("darkMode", "true");
+    } else {
+      const isDark = savedTheme === "true";
+      setDarkMode(isDark);
+      if (isDark) {
+        document.documentElement.classList.add("dark");
+      } else {
+        document.documentElement.classList.remove("dark");
+      }
     }
   }, []);
 
@@ -63,12 +70,12 @@ function App() {
     <div className={`${darkMode ? "dark" : ""} min-h-screen`}>
       <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition duration-300">
         {/* Header Section */}
-        <header className="flex items-center justify-between px-6 py-4 absolute top-0 left-0 w-full z-50 bg-transparent">
+        <header className="flex items-center justify-between px-6 py-4 absolute top-0 left-0 right-0 z-50 bg-transparent max-w-7xl mx-auto">
           <div className="flex items-center">
             <img
               src={darkMode ? "/images/company-logo-white.png" : "/images/company-logo-black.png"}
               alt="Company Logo"
-              className={`h-16 w-32 object-contain ${!darkMode ? "transform scale-[1.5] origin-left" : ""}`} // Scale only black logo
+              className={`h-16 w-32 object-contain max-w-[200px] ${!darkMode ? "transform scale-[1.5] origin-left" : ""}`}
               onError={(e) => (e.target.src = "https://via.placeholder.com/150?text=Logo+Not+Found")}
             />
           </div>
@@ -81,29 +88,17 @@ function App() {
           </button>
         </header>
 
-        {/* Hero Section */}
-        <HeroSection darkMode={darkMode} />
-
-        {/* Services Section */}
-        <ServicesSection />
-
-        {/* Case Study Section for Struxure (SEO) */}
-        <CaseStudySection />
-
-        {/* Case Study Section for Firegang */}
-        <CaseStudySectionFiregang />
-
-        {/* Case Study Section for Struxure Configurator */}
-        <CaseStudySectionStruxureConfigurator />
-
-        {/* Process Section */}
-        <ProcessSection darkMode={darkMode} />
-
-        {/* Contact Section */}
-        <ContactSection />
-
-        {/* Footer */}
-        <Footer />
+        {/* Content Wrapper with Max Width */}
+        <div className="max-w-7xl mx-auto px-4">
+          <HeroSection darkMode={darkMode} />
+          <ServicesSection />
+          <CaseStudySection />
+          <CaseStudySectionFiregang />
+          <CaseStudySectionStruxureConfigurator />
+          <ProcessSection darkMode={darkMode} />
+          <ContactSection />
+          <Footer />
+        </div>
       </div>
     </div>
   );
@@ -115,7 +110,6 @@ function HeroSection({ darkMode }) {
   const yText = useTransform(scrollY, [0, 200], [0, -50]);
   const scaleCTA = useTransform(scrollY, [0, 200], [1, 0.9]);
 
-  // Particle data for the enhanced animation
   const particles = Array.from({ length: 80 }).map((_, i) => ({
     id: i,
     x: Math.random() * 100,
@@ -126,16 +120,16 @@ function HeroSection({ darkMode }) {
 
   return (
     <motion.section
-      className="relative h-screen flex items-center justify-center overflow-hidden"
+      className="relative h-screen flex items-center justify-center overflow-hidden w-full"
     >
-      {/* Futuristic Marketing Background: Enhanced Digital Wave with Glowing Gradient, Particles, and Pulsing Overlay */}
+      {/* Background (Full Width) */}
       <motion.div
-        className="absolute inset-0 z-0 pointer-events-none"
+        className="absolute inset-0 z-0 pointer-events-none w-[100vw] h-full left-0 right-0"
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.35 }}
         transition={{ duration: 1 }}
       >
-        <svg className="w-full h-full" preserveAspectRatio="none">
+        <svg className="w-[100vw] h-full" preserveAspectRatio="none">
           <defs>
             <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" style={{ stopColor: darkMode ? "#A855F7" : "#3B82F6", stopOpacity: 0.7 }} />
@@ -155,7 +149,6 @@ function HeroSection({ darkMode }) {
               <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 2 0" />
             </filter>
           </defs>
-          {/* Pulsing Overlay */}
           <motion.circle
             cx="50%"
             cy="50%"
@@ -169,7 +162,6 @@ function HeroSection({ darkMode }) {
               ease: "easeInOut",
             }}
           />
-          {/* Digital Wave with Glow */}
           <motion.path
             d="M-200,800 Q400,600 800,800 T1600,800"
             fill="url(#waveGradient)"
@@ -207,7 +199,6 @@ function HeroSection({ darkMode }) {
               delay: 1,
             }}
           />
-          {/* Enhanced Particles with Drifting Motion */}
           {particles.map((particle) => (
             <motion.circle
               key={particle.id}
@@ -233,9 +224,8 @@ function HeroSection({ darkMode }) {
         </svg>
       </motion.div>
 
-      {/* Main Content */}
-      <div className="container mx-auto flex flex-col items-center justify-center px-6 z-10">
-        {/* Text Content (Centered) */}
+      {/* Main Content (Constrained) */}
+      <div className="max-w-7xl mx-auto px-6 z-10">
         <div className="text-center">
           <motion.h1
             className="text-4xl md:text-6xl font-extrabold mb-4"
@@ -275,43 +265,44 @@ function HeroSection({ darkMode }) {
         </div>
       </div>
 
-      {/* Stats Section at the Bottom */}
+      {/* Stats Section (Constrained) */}
       <motion.div
-        className="absolute bottom-8 left-0 right-0 flex justify-center space-x-8 md:space-x-16 z-10"
+        className="absolute bottom-8 left-0 right-0 z-10 max-w-7xl mx-auto px-6"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 1, delay: 0.5 }}
       >
-        <div className="text-center">
-          <p className="text-2xl md:text-3xl font-bold" style={{ color: darkMode ? "#FFFFFF" : "#1F2937" }}>
-            70+
-          </p>
-          <p className="text-sm md:text-base" style={{ color: darkMode ? "#D1D5DB" : "#4B5563" }}>
-            Featured Projects
-          </p>
-        </div>
-        <div className="text-center">
-          <p className="text-2xl md:text-3xl font-bold" style={{ color: darkMode ? "#FFFFFF" : "#1F2937" }}>
-            10K+
-          </p>
-          <p className="text-sm md:text-base" style={{ color: darkMode ? "#D1D5DB" : "#4B5563" }}>
-            Turnover per Year
-          </p>
-        </div>
-        <div className="text-center">
-          <p className="text-2xl md:text-3xl font-bold" style={{ color: darkMode ? "#FFFFFF" : "#1F2937" }}>
-            100+
-          </p>
-          <p className="text-sm md:text-base" style={{ color: darkMode ? "#D1D5DB" : "#4B5563" }}>
-            Happy Customers
-          </p>
+        <div className="flex justify-center space-x-8 md:space-x-16">
+          <div className="text-center">
+            <p className="text-2xl md:text-3xl font-bold" style={{ color: darkMode ? "#FFFFFF" : "#1F2937" }}>
+              70+
+            </p>
+            <p className="text-sm md:text-base" style={{ color: darkMode ? "#D1D5DB" : "#4B5563" }}>
+              Featured Projects
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl md:text-3xl font-bold" style={{ color: darkMode ? "#FFFFFF" : "#1F2937" }}>
+              10K+
+            </p>
+            <p className="text-sm md:text-base" style={{ color: darkMode ? "#D1D5DB" : "#4B5563" }}>
+              Turnover per Year
+            </p>
+          </div>
+          <div className="text-center">
+            <p className="text-2xl md:text-3xl font-bold" style={{ color: darkMode ? "#FFFFFF" : "#1F2937" }}>
+              100+
+            </p>
+            <p className="text-sm md:text-base" style={{ color: darkMode ? "#D1D5DB" : "#4B5563" }}>
+              Happy Customers
+            </p>
+          </div>
         </div>
       </motion.div>
     </motion.section>
   );
 }
 
-  
 function ServicesSection() {
   return (
     <section className="py-16 bg-gray-50 dark:bg-gray-900">
@@ -570,7 +561,7 @@ function CaseStudySectionStruxureConfigurator() {
 
   return (
     <motion.section
-      className="py-16 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+      className="py-16 bg-gray-50 dark:dark:bg-gray-900 text-gray-900 dark:text-gray-100"
       initial={{ opacity: 0, y: 50 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 1 }}
