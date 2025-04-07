@@ -2,6 +2,45 @@ import React, { useState, useEffect } from "react";
 import { FaSun, FaMoon } from "react-icons/fa";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 
+// Modal Component for Popout
+const Modal = ({ isOpen, onClose, imageSrc, altText }) => {
+  if (!isOpen) return null;
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.3 }}
+    >
+      <motion.div
+        className="relative bg-white dark:bg-gray-800 rounded-lg p-4 max-w-4xl w-full mx-4"
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.8, opacity: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-600 dark:text-gray-300 hover:text-gray-800 dark:hover:text-gray-100"
+          aria-label="Close Modal"
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        <img
+          src={imageSrc}
+          alt={altText}
+          className="w-full h-auto rounded-lg"
+          onError={(e) => (e.target.src = "https://via.placeholder.com/800x400?text=Image+Not+Found")}
+        />
+      </motion.div>
+    </motion.div>
+  );
+};
+
 const serviceData = [
   {
     title: "SEO Services",
@@ -66,9 +105,58 @@ function App() {
     localStorage.setItem("darkMode", newMode);
   };
 
+  // Starry background data - 300 stars for dense coverage
+  const stars = Array.from({ length: 300 }).map((_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    size: Math.random() * 2 + 0.5,
+    opacity: Math.random() * 0.3 + 0.2,
+  }));
+
   return (
-    <div className={`${darkMode ? "dark" : ""} min-h-screen`}>
-      <div className="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition duration-300">
+    <div className={`${darkMode ? "dark" : ""} min-h-screen relative overflow-x-hidden bg-gray-50 dark:bg-[#1A1A1A]`}>
+      {/* Starry Background - Full Page, Transparent */}
+      <motion.div
+        className="fixed inset-0 z-0 pointer-events-none w-[100vw] h-[100vh] bg-transparent"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1 }}
+      >
+        <svg className="w-full h-full" preserveAspectRatio="none">
+          {stars.map((star) => (
+            <motion.circle
+              key={star.id}
+              cx={`${star.x}%`}
+              cy={`${star.y}%`}
+              r={star.size}
+              fill={darkMode ? "#B0B0B0" : "#D3D3D3"}
+              opacity={star.opacity}
+              animate={{
+                cx: [
+                  `${star.x}%`,
+                  `${star.x + Math.random() * 2 - 1}%`,
+                  `${star.x}%`,
+                ],
+                cy: [
+                  `${star.y}%`,
+                  `${star.y + Math.random() * 2 - 1}%`,
+                  `${star.y}%`,
+                ],
+              }}
+              transition={{
+                duration: Math.random() * 10 + 5,
+                repeat: Infinity,
+                repeatType: "loop",
+                ease: "easeInOut",
+              }}
+            />
+          ))}
+        </svg>
+      </motion.div>
+
+      {/* Main Content */}
+      <div className="text-gray-900 dark:text-gray-100 transition duration-300 relative z-10">
         {/* Header Section */}
         <header className="flex items-center justify-between px-6 py-4 absolute top-0 left-0 right-0 z-50 bg-transparent max-w-7xl mx-auto">
           <div className="flex items-center">
@@ -88,9 +176,11 @@ function App() {
           </button>
         </header>
 
-        {/* Content Wrapper with Max Width */}
+        {/* Hero Section (Outside Constrained Container) */}
+        <HeroSection darkMode={darkMode} />
+
+        {/* Content Wrapper with Max Width for Other Sections */}
         <div className="max-w-7xl mx-auto px-4">
-          <HeroSection darkMode={darkMode} />
           <ServicesSection />
           <CaseStudySection />
           <CaseStudySectionFiregang />
@@ -103,7 +193,6 @@ function App() {
     </div>
   );
 }
-
 function HeroSection({ darkMode }) {
   const { scrollY } = useScroll();
   const opacityText = useTransform(scrollY, [0, 200], [1, 0]);
@@ -124,12 +213,13 @@ function HeroSection({ darkMode }) {
     >
       {/* Background (Full Width) */}
       <motion.div
-        className="absolute inset-0 z-0 pointer-events-none w-[100vw] h-full left-0 right-0"
+        className="absolute inset-0 z-0 pointer-events-none w-[100vw] h-full"
+        style={{ left: "50%", right: "50%", marginLeft: "calc(-50vw)", marginRight: "calc(-50vw)" }}
         initial={{ opacity: 0 }}
         animate={{ opacity: 0.35 }}
         transition={{ duration: 1 }}
       >
-        <svg className="w-[100vw] h-full" preserveAspectRatio="none">
+        <svg className="w-full h-full" preserveAspectRatio="none">
           <defs>
             <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%" style={{ stopColor: darkMode ? "#A855F7" : "#3B82F6", stopOpacity: 0.7 }} />
@@ -305,9 +395,9 @@ function HeroSection({ darkMode }) {
 
 function ServicesSection() {
   return (
-    <section className="py-16 bg-gray-50 dark:bg-gray-900">
+    <section className="py-16">
       <div className="container mx-auto text-center">
-        <h2 className="text-5xl font-bold mb-6">Our Expertise</h2>
+        <h2 className="text-5xl font-bold mb-6 text-gray-900 dark:text-gray-100">Our Expertise</h2>
         <p className="text-lg text-gray-600 dark:text-gray-300 mb-12">
           We provide a wide range of services tailored to your business needs.
         </p>
@@ -341,9 +431,25 @@ function ServicesSection() {
 function CaseStudySection() {
   console.log("Rendering CaseStudySection for Struxure...");
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalImage, setModalImage] = useState("");
+  const [modalAltText, setModalAltText] = useState("");
+
+  const openModal = (imageSrc, altText) => {
+    setModalImage(imageSrc);
+    setModalAltText(altText);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setModalImage("");
+    setModalAltText("");
+  };
+
   return (
     <motion.section
-      className="py-16 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+      className="py-16 text-gray-900 dark:text-gray-100"
       initial={{ opacity: 0, y: 50 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 1 }}
@@ -355,7 +461,7 @@ function CaseStudySection() {
           See how we transformed Struxure’s online presence with data-driven SEO strategies.
         </p>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
           <div className="text-left">
             <h3 className="text-3xl font-bold mb-4">The Challenge</h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
@@ -367,6 +473,7 @@ function CaseStudySection() {
               We implemented a comprehensive SEO strategy, including on-page optimization, content creation targeting high-intent keywords, and a robust link-building campaign. Over 6 months, we achieved remarkable results.
             </p>
 
+            {/* Stats Boxes on Left Side */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <motion.div
                 className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6"
@@ -412,11 +519,42 @@ function CaseStudySection() {
           </div>
 
           <div className="flex flex-col items-center">
+            {/* New Performance Chart at Top Right */}
             <motion.div
-              className="w-full mb-8"
+              className="w-full cursor-pointer"
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
+              onClick={() =>
+                openModal(
+                  "/images/struxure-ahrefs-performance-chart.png",
+                  "Struxure Organic Traffic and Traffic Value Growth Chart (Performance)"
+                )
+              }
+            >
+              <img
+                src="/images/struxure-ahrefs-performance-chart.png"
+                alt="Struxure Organic Traffic and Traffic Value Growth Chart (Performance)"
+                className="w-full rounded-lg shadow-lg"
+                onError={(e) => (e.target.src = "https://via.placeholder.com/600x300?text=Chart+Not+Found")}
+              />
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                Organic traffic and traffic value growth over time (Source: Ahrefs). Click to enlarge.
+              </p>
+            </motion.div>
+
+            {/* Original Chart Below Performance Chart */}
+            <motion.div
+              className="mt-8 w-full cursor-pointer"
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+              onClick={() =>
+                openModal(
+                  "/images/struxure-ahrefs-graph.png",
+                  "Struxure Organic Traffic Growth Graph"
+                )
+              }
             >
               <img
                 src="/images/struxure-ahrefs-graph.png"
@@ -425,23 +563,57 @@ function CaseStudySection() {
                 onError={(e) => (e.target.src = "https://via.placeholder.com/600x300?text=Graph+Not+Found")}
               />
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                Organic traffic and traffic value growth over time (Source: Ahrefs)
-              </p>
-            </motion.div>
-
-            <motion.div
-              className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 w-full"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <h4 className="text-xl font-bold mb-4">What Struxure Says About Us</h4>
-              <p className="text-gray-600 dark:text-gray-400">
-                [Google My Business reviews coming soon! We’re working with Struxure to gather their feedback.]
+                Organic traffic growth over time (Source: Ahrefs). Click to enlarge.
               </p>
             </motion.div>
           </div>
         </div>
+
+        {/* Updated Testimonial Section with Transparent Background and Clickable Image */}
+        <motion.div
+          className="mt-12 shadow-lg rounded-lg p-6 max-w-2xl mx-auto w-full bg-opacity-10 backdrop-blur-md"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <h4 className="text-xl font-bold mb-4 text-gray-100 dark:text-gray-100">What Struxure Says About Us</h4>
+          <div
+            className="cursor-pointer"
+            onClick={() =>
+              openModal(
+                "/images/struxure-gmb-review.png",
+                "Struxure Google My Business Review"
+              )
+            }
+          >
+            <img
+              src="/images/struxure-gmb-review.png"
+              alt="Struxure Google My Business Review"
+              className="w-full rounded-lg shadow-md mb-4"
+              onError={(e) => (e.target.src = "https://via.placeholder.com/600x200?text=Review+Image+Not+Found")}
+            />
+          </div>
+          <div className="flex justify-center">
+            <motion.a
+              href="https://g.co/kgs/Kf5fBXi"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block py-2 px-4 bg-indigo-600 text-white font-semibold rounded-lg shadow-lg hover:bg-indigo-700 transition duration-300"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              Verify GMB Review
+            </motion.a>
+          </div>
+        </motion.div>
+
+        {/* Modal for Chart and Review Image Popout */}
+        <Modal
+          isOpen={isModalOpen}
+          onClose={closeModal}
+          imageSrc={modalImage}
+          altText={modalAltText}
+        />
       </div>
     </motion.section>
   );
@@ -450,9 +622,25 @@ function CaseStudySection() {
 function CaseStudySectionFiregang() {
   console.log("Rendering CaseStudySection for Firegang...");
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalImage, setModalImage] = useState("");
+  const [modalAltText, setModalAltText] = useState("");
+
+  const openModal = (imageSrc, altText) => {
+    setModalImage(imageSrc);
+    setModalAltText(altText);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setModalImage("");
+    setModalAltText("");
+  };
+
   return (
     <motion.section
-      className="py-16 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+      className="py-16 text-gray-900 dark:text-gray-100"
       initial={{ opacity: 0, y: 50 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 1 }}
@@ -464,7 +652,7 @@ function CaseStudySectionFiregang() {
           See how we skyrocketed Firegang’s online visibility with targeted SEO strategies.
         </p>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
           <div className="text-left">
             <h3 className="text-3xl font-bold mb-4">The Challenge</h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
@@ -476,6 +664,7 @@ function CaseStudySectionFiregang() {
               We developed a tailored SEO campaign focusing on keyword optimization, technical SEO improvements, and a strategic link-building plan. Over 6 months, we delivered exponential growth in traffic and lead generation.
             </p>
 
+            {/* Stats Boxes on Left Side */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <motion.div
                 className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6"
@@ -521,11 +710,42 @@ function CaseStudySectionFiregang() {
           </div>
 
           <div className="flex flex-col items-center">
+            {/* New Performance Chart at Top Right */}
             <motion.div
-              className="w-full mb-8"
+              className="w-full cursor-pointer"
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
+              onClick={() =>
+                openModal(
+                  "/images/firegang-ahrefs-performance-chart.png",
+                  "Firegang Organic Traffic and Traffic Value Growth Chart (Performance)"
+                )
+              }
+            >
+              <img
+                src="/images/firegang-ahrefs-performance-chart.png"
+                alt="Firegang Organic Traffic and Traffic Value Growth Chart (Performance)"
+                className="w-full rounded-lg shadow-lg"
+                onError={(e) => (e.target.src = "https://via.placeholder.com/600x300?text=Chart+Not+Found")}
+              />
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                Organic traffic and traffic value growth over time (Source: Ahrefs). Click to enlarge.
+              </p>
+            </motion.div>
+
+            {/* Original Chart Below Performance Chart */}
+            <motion.div
+              className="mt-8 w-full cursor-pointer"
+              initial={{ opacity: 0, scale: 0.9 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+              onClick={() =>
+                openModal(
+                  "/images/firegang-ahrefs-graph.png",
+                  "Firegang Organic Traffic Growth Graph"
+                )
+              }
             >
               <img
                 src="/images/firegang-ahrefs-graph.png"
@@ -534,23 +754,32 @@ function CaseStudySectionFiregang() {
                 onError={(e) => (e.target.src = "https://via.placeholder.com/600x300?text=Graph+Not+Found")}
               />
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                Organic traffic and traffic value growth over time (Source: Ahrefs)
-              </p>
-            </motion.div>
-
-            <motion.div
-              className="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 w-full"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <h4 className="text-xl font-bold mb-4">What Firegang Says About Us</h4>
-              <p className="text-gray-600 dark:text-gray-400">
-                [Google My Business reviews coming soon! We’re working with Firegang to gather their feedback.]
+                Organic traffic growth over time (Source: Ahrefs). Click to enlarge.
               </p>
             </motion.div>
           </div>
         </div>
+
+        {/* Testimonial Section Moved to Bottom Center */}
+        <motion.div
+          className="mt-12 bg-white dark:bg-gray-800 shadow-lg rounded-lg p-6 max-w-2xl mx-auto w-full"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+        >
+          <h4 className="text-xl font-bold mb-4">What Firegang Says About Us</h4>
+          <p className="text-gray-600 dark:text-gray-400">
+            [Google My Business reviews coming soon! We’re working with Firegang to gather their feedback.]
+          </p>
+        </motion.div>
+
+        {/* Modal for Chart Popout */}
+        <Modal
+          isOpen={isModalOpen}
+          onClose={closeModal}
+          imageSrc={modalImage}
+          altText={modalAltText}
+        />
       </div>
     </motion.section>
   );
@@ -559,9 +788,25 @@ function CaseStudySectionFiregang() {
 function CaseStudySectionStruxureConfigurator() {
   console.log("Rendering CaseStudySection for Struxure Configurator...");
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalImage, setModalImage] = useState("");
+  const [modalAltText, setModalAltText] = useState("");
+
+  const openModal = (imageSrc, altText) => {
+    setModalImage(imageSrc);
+    setModalAltText(altText);
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setModalImage("");
+    setModalAltText("");
+  };
+
   return (
     <motion.section
-      className="py-16 bg-gray-50 dark:dark:bg-gray-900 text-gray-900 dark:text-gray-100"
+      className="py-16 text-gray-900 dark:text-gray-100"
       initial={{ opacity: 0, y: 50 }}
       whileInView={{ opacity: 1, y: 0 }}
       transition={{ duration: 1 }}
@@ -626,11 +871,18 @@ function CaseStudySectionStruxureConfigurator() {
           </div>
 
           <div className="flex flex-col items-center">
+            {/* Configurator Screenshot with Clickable Popout */}
             <motion.div
-              className="w-full mb-8"
+              className="w-full mb-8 cursor-pointer"
               initial={{ opacity: 0, scale: 0.9 }}
               whileInView={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.5 }}
+              onClick={() =>
+                openModal(
+                  "/images/struxure-configurator-screenshot.png",
+                  "Struxure Configurator Screenshot"
+                )
+              }
             >
               <img
                 src="/images/struxure-configurator-screenshot.png"
@@ -639,7 +891,7 @@ function CaseStudySectionStruxureConfigurator() {
                 onError={(e) => (e.target.src = "https://via.placeholder.com/600x300?text=Screenshot+Not+Found")}
               />
               <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-                Screenshot of the custom configurator at configurator.struxure.com
+                Screenshot of the custom configurator at configurator.struxure.com. Click to enlarge.
               </p>
             </motion.div>
 
@@ -656,6 +908,14 @@ function CaseStudySectionStruxureConfigurator() {
             </motion.div>
           </div>
         </div>
+
+        {/* Modal for Configurator Screenshot Popout */}
+        <Modal
+          isOpen={isModalOpen}
+          onClose={closeModal}
+          imageSrc={modalImage}
+          altText={modalAltText}
+        />
       </div>
     </motion.section>
   );
@@ -697,7 +957,7 @@ function ProcessSection({ darkMode }) {
   };
 
   return (
-    <section className="py-16 bg-gray-50 dark:bg-gray-900">
+    <section className="py-16">
       <div className="container mx-auto text-center">
         <h2 className="text-5xl font-bold mb-12 text-gray-900 dark:text-gray-100">
           Our Process
@@ -772,7 +1032,7 @@ function ContactSection() {
   };
 
   return (
-    <section id="contact" className="py-16 bg-gray-50 dark:bg-gray-900">
+    <section id="contact" className="py-16">
       <div className="container mx-auto text-center">
         <h2 className="text-5xl font-bold mb-6 text-gray-900 dark:text-gray-100">Get in Touch</h2>
         <p className="text-lg text-gray-600 dark:text-gray-300 mb-12 max-w-2xl mx-auto">
@@ -832,7 +1092,7 @@ function ContactSection() {
 
 function Footer() {
   return (
-    <footer className="py-8 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
+    <footer className="py-8 text-gray-900 dark:text-gray-100">
       <div className="container mx-auto text-center">
         <p className="text-gray-600 dark:text-gray-300">
           Elite Search Commander © {new Date().getFullYear()}. All rights reserved.
